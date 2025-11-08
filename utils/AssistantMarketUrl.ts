@@ -1,42 +1,56 @@
-// u14app-gemini-next-chat/utils/AssistantMarketUrl.ts
+// utils/AssistantMarketUrl.ts
 
 class AssistantMarketUrl {
-  private readonly baseUrl: string
+  private readonly baseUrl: string;
+  private readonly useProxy: boolean;
+
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || ''
+    this.baseUrl = baseUrl || '';
+    this.useProxy = this.baseUrl.includes('npmmirror.com');
+  }
+
+  private buildUrl(path: string): string {
+    const fullUrl = this.baseUrl + path;
+    if (this.useProxy) {
+      return `/api/proxy?url=${encodeURIComponent(fullUrl)}`;
+    }
+    return fullUrl;
   }
 
   getIndexUrl(lang: string = 'en-US') {
-    // 关键修复：如果基础URL已经是一个.json文件，直接返回它，不再拼接
     if (this.baseUrl.endsWith('.json')) {
+      if (this.useProxy) {
+        return `/api/proxy?url=${encodeURIComponent(this.baseUrl)}`;
+      }
       return this.baseUrl;
     }
 
-    // 如果基础URL是一个目录，则执行原来的拼接逻辑
+    let path = '';
     if (lang === 'zh-CN' || lang === 'zh') {
-      return this.baseUrl + '/index.zh-CN.json';
+      path = '/index.zh-CN.json';
+    } else if (lang === 'en-US') {
+      path = '/index.json';
+    } else if (lang === 'ar-SA') {
+      path = '/index.ar.json';
+    } else {
+      path = `/index.${lang}.json`;
     }
-    if (lang === 'en-US') {
-      return this.baseUrl + '/index.json';
-    }
-    if (lang === 'ar-SA') {
-      return this.baseUrl + '/index.ar.json';
-    }
-    return this.baseUrl + '/index.' + lang + '.json';
+    return this.buildUrl(path);
   }
 
   getAssistantUrl(identifier: string, lang: string = 'en-US') {
+    let path = '';
     if (lang === 'zh-CN' || lang === 'zh') {
-      return this.baseUrl + '/' + identifier + '.zh-CN.json';
+      path = `/${identifier}.zh-CN.json`;
+    } else if (lang === 'en-US') {
+      path = `/${identifier}.json`;
+    } else if (lang === 'ar-SA') {
+      path = `/${identifier}.ar.json`;
+    } else {
+      path = `/${identifier}.${lang}.json`;
     }
-    if (lang === 'en-US') {
-      return this.baseUrl + '/' + identifier + '.json';
-    }
-    if (lang === 'ar-SA') {
-      return this.baseUrl + '/' + identifier + '.ar.json';
-    }
-    return this.baseUrl + '/' + identifier + '.' + lang + '.json';
+    return this.buildUrl(path);
   }
 }
 
-export default AssistantMarketUrl
+export default AssistantMarketUrl;
